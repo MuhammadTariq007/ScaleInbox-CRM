@@ -1466,6 +1466,45 @@
       "owner": "Owner",
       "ownerHint": "Full control over account and billing"
     },
+    "tenantConfig": {
+      "title": "Tenant configuration",
+      "description": "Adjust the tenant-level billing and workspace settings for this account.",
+      "loading": "Loading tenant settings…",
+      "tenantName": "Tenant name",
+      "plan": "Plan",
+      "billingEmail": "Billing email",
+      "timezone": "Timezone",
+      "save": "Save changes",
+      "saved": "Tenant configuration saved",
+      "loadError": "Could not load tenant settings",
+      "saveError": "Could not save tenant settings",
+      "missingTenant": "This workspace is not assigned to a tenant yet."
+    },
+    "featureFlags": {
+      "title": "Feature flags",
+      "description": "Enable or disable product features for this tenant and review the current plan limits.",
+      "loading": "Loading feature flags…",
+      "save": "Save changes",
+      "saved": "Feature flags updated",
+      "loadError": "Could not load feature flags",
+      "saveError": "Could not save feature flags",
+      "missingTenant": "This workspace is not assigned to a tenant yet.",
+      "quota": {
+        "seats": "Seats",
+        "broadcasts": "Broadcasts",
+        "contacts": "Contacts",
+        "automations": "Automations"
+      },
+      "details": {
+        "broadcasts": "Send multi-recipient campaigns.",
+        "automations": "Create workflow automations.",
+        "ai_assistant": "Enable AI drafting and assistant features.",
+        "shared_inbox": "Allow shared team inbox access.",
+        "contacts": "Manage contact records and tags.",
+        "custom_fields": "Use custom field definitions on contacts.",
+        "whatsapp_integration": "Use Meta WhatsApp integrations and sending flows."
+      }
+    },
     "whatsapp": {
       "title": "WhatsApp connection",
       "description": "Connect your Meta WhatsApp Business API. Credentials, webhook, and setup steps all live here.",
@@ -1549,6 +1588,8 @@
       "fields": "Fields & tags",
       "deals": "Deals & currency",
       "members": "Team members",
+      "tenant-config": "Tenant config",
+      "feature-flags": "Feature flags",
       "api": "API keys"
     },
     "groups": {

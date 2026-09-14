@@ -13,6 +13,7 @@ import {
   Crown,
   GitBranch,
   LayoutDashboard,
+  Landmark,
   LogOut,
   MessageSquare,
   Radio,
@@ -101,6 +102,15 @@ const navItems: NavItem[] = [
   { href: "/agents", labelKey: "aiAgents", icon: Bot },
 ];
 
+const platformNavItems = [
+  { href: "/super-admin", label: "Overview", icon: Landmark },
+  { href: "/super-admin/tenants", label: "Tenants", icon: UsersRound },
+  { href: "/super-admin/users", label: "Users", icon: Users },
+  { href: "/super-admin/billing", label: "Billing", icon: Landmark },
+  { href: "/super-admin/audit", label: "Audit", icon: Shield },
+  { href: "/super-admin/settings", label: "Settings", icon: Settings },
+];
+
 const bottomNavItems = [
   { href: "/settings", labelKey: "settings", icon: Settings },
 ];
@@ -116,7 +126,7 @@ import { useTranslations } from "next-intl";
 export function Sidebar({ open = false, onClose }: SidebarProps) {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
-  const { profile, profileLoading, account, accountRole, signOut } = useAuth();
+  const { profile, profileLoading, account, accountRole, signOut, isPlatformAdmin } = useAuth();
   const totalUnread = useTotalUnread();
   const unreadNotifications = useUnreadNotifications();
   // Only surface the account-name strip when it actually carries
@@ -175,122 +185,126 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
 
       <aside
         className={cn(
-          // Mobile: fixed drawer that slides in from the left.
-          "fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r border-border bg-card",
+          "fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r border-[#1f2a34] bg-[#050b12] text-slate-100",
           "transition-transform duration-200 ease-out will-change-transform",
           open ? "translate-x-0" : "-translate-x-full",
-          // Desktop: static, always visible — reset all the mobile framing.
-          "lg:static lg:z-0 lg:w-60 lg:translate-x-0 lg:transition-none",
+          "lg:static lg:z-0 lg:w-64 lg:translate-x-0 lg:transition-none",
         )}
         aria-label="Primary"
       >
-        {/* Logo row. On mobile we put a close button here; on desktop the
-            close button is hidden since the sidebar is always-visible. */}
-        <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <MessageSquare className="h-4 w-4" />
+        <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-[#1a2430] px-4">
+          <Link href={isPlatformAdmin ? "/super-admin" : "/dashboard"} className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#2c3a46] bg-[#0d141b] text-[10px] font-bold tracking-[0.2em] text-slate-200">
+              N
             </div>
-            <span className="text-sm font-semibold text-foreground">
-              {t("title")}
-            </span>
+            <div className="leading-none">
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">
+                {isPlatformAdmin ? "Platform" : "Tenant"}
+              </div>
+              <div className="mt-1 text-sm font-semibold text-slate-100">
+                {isPlatformAdmin ? "Super admin" : t("title")}
+              </div>
+            </div>
           </Link>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("closeMenu")}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Main navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <ul className="flex flex-col gap-1">
-            {navItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          <div className="rounded-xl border border-[#1a2430] bg-[#0d141b] p-2 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+            <div className="mb-2 px-2 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-400">
+              {isPlatformAdmin ? "Console" : "Workspace"}
+            </div>
+            <ul className="flex flex-col gap-1">
+              {(isPlatformAdmin ? platformNavItems : navItems).map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  ("href" in item && item.href !== "/dashboard" && pathname.startsWith(item.href));
 
-              const showUnreadDot =
-                item.href === "/inbox" && totalUnread > 0 && !isActive;
+                const showUnreadDot =
+                  !isPlatformAdmin &&
+                  item.href === "/inbox" &&
+                  totalUnread > 0 &&
+                  !isActive;
 
-              // Unlike the inbox dot, the notifications count stays visible
-              // even while the page is active — it reflects unread state
-              // (cleared by marking notifications read), not "currently
-              // viewing this section".
-              const showNotificationBadge =
-                item.href === "/notifications" && unreadNotifications > 0;
+                const showNotificationBadge =
+                  !isPlatformAdmin &&
+                  item.href === "/notifications" &&
+                  unreadNotifications > 0;
 
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      // Taller on mobile so fingers can hit the row reliably (≥44px).
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:py-2",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="flex-1">{t(item.labelKey as string)}</span>
-                    {item.beta && (
-                      <span
-                        aria-label={t("beta")}
-                        className="rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-300"
+                const Icon = item.icon;
+                const label = "label" in item ? item.label : t((item as any).labelKey as string);
+
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-[#0d6d5b] text-emerald-100 shadow-[inset_0_0_0_1px_rgba(167,243,208,0.15)]"
+                          : "text-slate-300 hover:bg-white/5 hover:text-white",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="flex-1">{label}</span>
+                      {"beta" in item && item.beta && (
+                        <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-300">
+                          {t("beta")}
+                        </span>
+                      )}
+                      {showUnreadDot && (
+                        <span aria-label={t("unreadConversations", { count: totalUnread })} className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                        </span>
+                      )}
+                      {showNotificationBadge && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-slate-950">
+                          {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {!isPlatformAdmin && (
+            <div className="mt-4 rounded-xl border border-[#1a2430] bg-[#0d141b] p-2 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+              <div className="mb-2 px-2 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-400">
+                Settings
+              </div>
+              <ul className="flex flex-col gap-1">
+                {bottomNavItems.map((item) => {
+                  const isActive = pathname.startsWith(item.href);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-[#0d6d5b] text-emerald-100 shadow-[inset_0_0_0_1px_rgba(167,243,208,0.15)]"
+                            : "text-slate-300 hover:bg-white/5 hover:text-white",
+                        )}
                       >
-                        {t("beta")}
-                      </span>
-                    )}
-                    {showUnreadDot && (
-                      <span
-                        aria-label={t("unreadConversations", { count: totalUnread })}
-                        className="relative flex h-2 w-2"
-                      >
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                      </span>
-                    )}
-                    {showNotificationBadge && (
-                      <span
-                        aria-label={t("unreadNotifications", { count: unreadNotifications })}
-                        className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground"
-                      >
-                        {unreadNotifications > 9 ? "9+" : unreadNotifications}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="my-4 border-t border-border" />
-
-          <ul className="flex flex-col gap-1">
-            {bottomNavItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:py-2",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {t(item.labelKey as string)}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                        <item.icon className="h-4 w-4" />
+                        {t(item.labelKey as string)}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </nav>
 
         {/* User section */}

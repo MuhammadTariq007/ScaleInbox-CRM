@@ -1466,6 +1466,45 @@
       "owner": "소유자",
       "ownerHint": "계정과 결제에 대한 전체 권한"
     },
+    "tenantConfig": {
+      "title": "테넌트 설정",
+      "description": "이 워크스페이스의 청구 및 테넌트 수준 설정을 관리합니다.",
+      "loading": "테넌트 설정을 불러오는 중…",
+      "tenantName": "테넌트 이름",
+      "plan": "플랜",
+      "billingEmail": "청구 이메일",
+      "timezone": "시간대",
+      "save": "변경 사항 저장",
+      "saved": "테넌트 설정이 저장되었습니다",
+      "loadError": "테넌트 설정을 불러오지 못했습니다",
+      "saveError": "테넌트 설정을 저장하지 못했습니다",
+      "missingTenant": "이 워크스페이스는 아직 테넌트에 연결되지 않았습니다."
+    },
+    "featureFlags": {
+      "title": "기능 플래그",
+      "description": "이 테넌트에서 제품 기능을 켜거나 끄고 현재 플랜 제한을 점검합니다.",
+      "loading": "기능 플래그를 불러오는 중…",
+      "save": "변경 사항 저장",
+      "saved": "기능 플래그가 업데이트되었습니다",
+      "loadError": "기능 플래그를 불러오지 못했습니다",
+      "saveError": "기능 플래그를 저장하지 못했습니다",
+      "missingTenant": "이 워크스페이스는 아직 테넌트에 연결되지 않았습니다.",
+      "quota": {
+        "seats": "사용자 수",
+        "broadcasts": "브로드캐스트",
+        "contacts": "연락처",
+        "automations": "자동화"
+      },
+      "details": {
+        "broadcasts": "다중 수신자 캠페인을 보냅니다.",
+        "automations": "워크플로 자동화를 생성합니다.",
+        "ai_assistant": "AI 초안 작성과 어시스턴트 기능을 활성화합니다.",
+        "shared_inbox": "공유 팀 인박스 접근을 허용합니다.",
+        "contacts": "연락처와 태그를 관리합니다.",
+        "custom_fields": "연락처에 사용자 지정 필드를 사용합니다.",
+        "whatsapp_integration": "Meta WhatsApp 통합 및 발송 흐름을 사용합니다."
+      }
+    },
     "whatsapp": {
       "title": "WhatsApp 연결",
       "description": "Meta WhatsApp 비즈니스 API를 연결하세요. 자격 증명, 웹훅, 설정 단계가 모두 여기 있습니다.",
@@ -1549,6 +1588,8 @@
       "fields": "필드 & 태그",
       "deals": "딜 & 통화",
       "members": "팀원",
+      "tenant-config": "테넌트 설정",
+      "feature-flags": "기능 플래그",
       "api": "API 키"
     },
     "groups": {

@@ -270,9 +270,9 @@ const TEMPLATE_ROW = {
 
 describe('sendMessageToConversation — Meta recipient restrictions', () => {
   it('maps the Meta allowed-list rejection to a clear user-facing error', async () => {
-    sendTextMessage.mockRejectedValueOnce(
-      new Error('( #131030 ) Recipient phone number not in allowed list')
-    );
+    sendTextMessage.mockImplementation(async () => {
+      throw new Error('( #131030 ) Recipient phone number not in allowed list');
+    });
 
     await expect(
       sendMessageToConversation(sendPathDb([], {}), 'acct-1', {

@@ -55,6 +55,12 @@ export async function middleware(request: NextRequest) {
   )) {
     const url = request.nextUrl.clone()
     const inviteToken = request.nextUrl.searchParams.get('invite')
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('platform_role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     if (
       inviteToken &&
       (request.nextUrl.pathname === '/login' ||
@@ -63,18 +69,41 @@ export async function middleware(request: NextRequest) {
       url.pathname = `/join/${encodeURIComponent(inviteToken)}`
       url.search = ''
     } else {
-      url.pathname = '/dashboard'
+      url.pathname = profile?.platform_role === 'platform_super_admin' ? '/super-admin' : '/dashboard'
       url.search = ''
     }
     return withRefreshedCookies(NextResponse.redirect(url))
   }
 
-  // Protected pages - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/settings']
+  // Protected pages - redirect to login if not authenticated.
+  // Super-admin routes also live behind the same auth wall and are gated
+  // again by the client-side platform-role check in the page layout.
+  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/settings', '/super-admin']
   if (!user && protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return withRefreshedCookies(NextResponse.redirect(url))
+  }
+
+  // CRM routes must be scoped to a tenant (or platform super-admin)
+  const tenantScopedPaths = ['/inbox', '/contacts', '/broadcasts', '/flows', '/settings'];
+  if (user && tenantScopedPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tenant_id, subtenant_id, platform_role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const hasScope =
+      profile?.platform_role === 'platform_super_admin' ||
+      !!profile?.tenant_id;
+
+    if (!hasScope) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      url.search = '';
+      return withRefreshedCookies(NextResponse.redirect(url));
+    }
   }
 
   // API routes that need auth (not webhooks)

@@ -1,12 +1,12 @@
 // ============================================================
 // /join/[token] layout — minimal full-bleed dark shell.
 //
-// The route group sits outside both `(auth)` and `(dashboard)`
+// The route group sits outside both `(auth)` and `(tenant)`
 // because it's hybrid: the page must render for anonymous
 // visitors (to show "Sign up to join Acme") *and* for signed-in
 // users (to show "Accept invite"). Reusing `(auth)`'s layout
 // would funnel signed-in users through the middleware's auth-
-// page redirect; reusing `(dashboard)` would funnel anonymous
+// page redirect; reusing `(tenant)` would funnel anonymous
 // visitors through its login redirect. A dedicated layout
 // avoids both.
 //

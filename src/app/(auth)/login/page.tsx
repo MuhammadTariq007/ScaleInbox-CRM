@@ -49,7 +49,7 @@ function LoginPageInner() {
     setError(null);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -60,17 +60,25 @@ function LoginPageInner() {
       return;
     }
 
+    let isPlatformAdmin = false;
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('platform_role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      isPlatformAdmin = profile?.platform_role === 'platform_super_admin';
+    }
+
     // Full-page navigation (not router.push) so the browser issues a
     // fresh top-level request that carries the just-written Supabase
-    // auth cookies to the middleware gating /dashboard. A soft
-    // client-side navigation can reach the protected route before the
-    // server observes the new session, so the middleware bounces it
-    // back to /login — which looks like the page "just refreshing"
-    // instead of signing in (issue #365). Mirrors the deliberate full
-    // reload the invite-accept flow already uses in join/[token].
+    // auth cookies to the middleware gating the correct portal.
     const destination = inviteToken
       ? `/join/${encodeURIComponent(inviteToken)}`
-      : "/dashboard";
+      : isPlatformAdmin
+        ? '/super-admin'
+        : '/dashboard';
     window.location.href = destination;
   };
 

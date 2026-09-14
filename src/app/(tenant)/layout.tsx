@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DashboardLayout({
+export default function TenantLayout({
   children,
 }: {
   children: React.ReactNode;
