@@ -7,7 +7,6 @@ export interface PlatformContext {
   userId: string;
   platformRole: PlatformRole;
   tenantId: string | null;
-  subtenantId: string | null;
   isPlatformAdmin: boolean;
 }
 
@@ -40,7 +39,7 @@ export async function resolvePlatformContext(): Promise<PlatformContext> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("platform_role, tenant_id, subtenant_id")
+    .select("platform_role, tenant_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -58,7 +57,6 @@ export async function resolvePlatformContext(): Promise<PlatformContext> {
     userId: user.id,
     platformRole,
     tenantId: data?.tenant_id ?? null,
-    subtenantId: data?.subtenant_id ?? null,
     isPlatformAdmin: platformRole === "platform_super_admin",
   };
 }
@@ -82,7 +80,7 @@ export async function requireTenantAccess(tenantId: string): Promise<PlatformCon
   return ctx;
 }
 
-export async function requireWorkspaceAccess(tenantId: string, subtenantId?: string | null): Promise<PlatformContext> {
+export async function requireWorkspaceAccess(tenantId: string): Promise<PlatformContext> {
   const ctx = await resolvePlatformContext();
   if (ctx.isPlatformAdmin) {
     return ctx;
@@ -90,10 +88,6 @@ export async function requireWorkspaceAccess(tenantId: string, subtenantId?: str
 
   if (!ctx.tenantId || ctx.tenantId !== tenantId) {
     throw new PlatformForbiddenError("This workspace is not available to the current user");
-  }
-
-  if (subtenantId && ctx.subtenantId !== subtenantId) {
-    throw new PlatformForbiddenError("This subtenant is not available to the current user");
   }
 
   return ctx;

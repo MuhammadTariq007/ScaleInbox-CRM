@@ -41,7 +41,6 @@ interface Profile {
   account_role: AccountRole | null;
   platform_role: PlatformRole | null;
   tenant_id: string | null;
-  subtenant_id: string | null;
 }
 
 interface AccountSummary {
@@ -143,8 +142,6 @@ interface AuthContextValue {
   isPlatformAdmin: boolean;
   /** Tenant the user is currently scoped to. */
   activeTenantId: string | null;
-  /** Optional subtenant currently selected. */
-  activeSubtenantId: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -169,7 +166,6 @@ interface ProfileRow {
   account_role: string | null;
   platform_role: string | null;
   tenant_id: string | null;
-  subtenant_id: string | null;
 }
 
 /**
@@ -210,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const result = await supabase
           .from("profiles")
           .select(
-            "id, full_name, email, avatar_url, role, beta_features, account_id, account_role, platform_role, tenant_id, subtenant_id",
+            "id, full_name, email, avatar_url, role, beta_features, account_id, account_role, platform_role, tenant_id",
           )
           .eq("user_id", userId)
           .maybeSingle();
@@ -304,7 +300,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           account_role: accountRole,
           platform_role: platformRole,
           tenant_id: data.tenant_id ?? null,
-          subtenant_id: data.subtenant_id ?? null,
         });
         setAccount(accountRow);
         if (!data.account_id || !accountRole) {
@@ -439,9 +434,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       platformRole,
       isPlatformAdmin: platformRole === "platform_super_admin",
       activeTenantId: profile?.tenant_id ?? null,
-      activeSubtenantId: profile?.subtenant_id ?? null,
     };
-  }, [profile?.account_role, profile?.account_id, profile?.platform_role, profile?.tenant_id, profile?.subtenant_id]);
+  }, [profile?.account_role, profile?.account_id, profile?.platform_role, profile?.tenant_id]);
 
   // Signed out is not a broken account — the shell redirects to /login
   // before anything reads this.
@@ -514,7 +508,6 @@ export function useAuth(): AuthContextValue {
       platformRole: null,
       isPlatformAdmin: false,
       activeTenantId: null,
-      activeSubtenantId: null,
     };
   }
   return ctx;

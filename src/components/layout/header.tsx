@@ -62,21 +62,17 @@ export function Header({ onOpenSidebar }: HeaderProps) {
     signOut,
     isPlatformAdmin,
     activeTenantId: authTenantId,
-    activeSubtenantId: authSubtenantId,
   } = useAuth();
   const {
     activeTenantId,
-    activeSubtenantId,
     switchTenant,
   } = useTenantSwitch();
   const [tenantOptions, setTenantOptions] = useState<Array<{ id: string; name: string }>>([]);
   const resolvedTenantId = activeTenantId ?? authTenantId;
-  const resolvedSubtenantId = activeSubtenantId ?? authSubtenantId;
   const titleKey = getPageTitleKey(pathname);
 
   useEffect(() => {
     if (isPlatformAdmin) {
-      setTenantOptions([]);
       return;
     }
 
@@ -137,12 +133,12 @@ export function Header({ onOpenSidebar }: HeaderProps) {
               <ChevronDown className="size-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
-              {tenantOptions.length > 0 && (
+              {(isPlatformAdmin ? [] : tenantOptions).length > 0 && (
                 <>
                   <div className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
                     Switch tenant
                   </div>
-                  {tenantOptions.map((tenant) => (
+                  {(isPlatformAdmin ? [] : tenantOptions).map((tenant) => (
                     <DropdownMenuItem
                       key={tenant.id}
                       onSelect={() => switchTenant(tenant.id)}
@@ -156,11 +152,6 @@ export function Header({ onOpenSidebar }: HeaderProps) {
               {resolvedTenantId && (
                 <DropdownMenuItem render={<Link href="/dashboard" />}>
                   Active tenant: {resolvedTenantId}
-                </DropdownMenuItem>
-              )}
-              {resolvedSubtenantId && (
-                <DropdownMenuItem render={<Link href="/dashboard" />}>
-                  Active subtenant: {resolvedSubtenantId}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

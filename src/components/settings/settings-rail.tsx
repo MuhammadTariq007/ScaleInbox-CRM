@@ -52,7 +52,7 @@ export function SettingsRail({
       className={cn(
         'flex gap-1 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         'border-b border-border',
-        'lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:pb-0',
+        'lg:sticky lg:top-6 lg:flex-col lg:overflow-visible lg:border-b-0 lg:pb-0',
       )}
     >
       {RAIL_GROUPS.map(({ label, group }) => {

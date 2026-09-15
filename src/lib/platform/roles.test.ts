@@ -8,13 +8,11 @@ import {
 } from "./roles";
 
 describe("platform role helpers", () => {
-  it("exposes the expected platform role hierarchy", () => {
+  it("exposes the expected tenant-only platform hierarchy", () => {
     expect(PLATFORM_ROLES).toEqual([
       "tenant_viewer",
       "tenant_agent",
-      "subtenant_agent",
       "tenant_admin",
-      "subtenant_admin",
       "tenant_owner",
       "platform_super_admin",
     ]);
@@ -30,7 +28,7 @@ describe("platform role helpers", () => {
     expect(roleRankForPlatform("tenant_viewer")).toBe(1);
     expect(roleRankForPlatform("tenant_agent")).toBe(2);
     expect(roleRankForPlatform("tenant_admin")).toBe(4);
-    expect(roleRankForPlatform("platform_super_admin")).toBe(7);
+    expect(roleRankForPlatform("platform_super_admin")).toBe(6);
   });
 
   it("supports minimum-role checks across the hierarchy", () => {

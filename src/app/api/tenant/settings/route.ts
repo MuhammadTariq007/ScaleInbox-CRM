@@ -112,11 +112,12 @@ export async function GET() {
       return NextResponse.json({ error: "Could not load tenant configuration" }, { status: 500 });
     }
 
-    let { data: settings, error: settingsErr } = await supabase
+    const { data: initialSettings, error: settingsErr } = await supabase
       .from("tenant_settings")
       .select("*")
       .eq("tenant_id", tenantId)
       .maybeSingle();
+    let settings = initialSettings;
 
     if (settingsErr) {
       console.error("[tenant/settings] settings lookup failed", settingsErr);
@@ -143,11 +144,12 @@ export async function GET() {
       settings = insertResult.data;
     }
 
-    let { data: quotaRow, error: quotaErr } = await supabase
+    const { data: initialQuotaRow, error: quotaErr } = await supabase
       .from("tenant_quota_limits")
       .select("*")
       .eq("tenant_id", tenantId)
       .maybeSingle();
+    let quotaRow = initialQuotaRow;
 
     if (quotaErr) {
       console.error("[tenant/settings] quota lookup failed", quotaErr);

@@ -11,9 +11,7 @@ import {
 
 interface TenantSwitchState {
   activeTenantId: string | null;
-  activeSubtenantId: string | null;
   switchTenant: (tenantId: string | null) => void;
-  switchSubtenant: (subtenantId: string | null) => void;
 }
 
 const TenantSwitchContext = createContext<TenantSwitchState | null>(null);
@@ -21,46 +19,37 @@ const STORAGE_KEY = "tenant-switch-state";
 
 function readPersistedState() {
   if (typeof window === "undefined") {
-    return { tenantId: null, subtenantId: null };
+    return { tenantId: null };
   }
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return { tenantId: null, subtenantId: null };
+      return { tenantId: null };
     }
 
     const parsed = JSON.parse(raw) as {
       tenantId?: string | null;
-      subtenantId?: string | null;
     };
 
     return {
       tenantId: typeof parsed.tenantId === "string" ? parsed.tenantId : null,
-      subtenantId:
-        typeof parsed.subtenantId === "string" ? parsed.subtenantId : null,
     };
   } catch {
-    return { tenantId: null, subtenantId: null };
+    return { tenantId: null };
   }
 }
 
 export function TenantSwitchProvider({
   children,
   initialTenantId,
-  initialSubtenantId,
 }: {
   children: ReactNode;
   initialTenantId?: string | null;
-  initialSubtenantId?: string | null;
 }) {
   const [activeTenantId, setActiveTenantId] = useState<string | null>(() => {
     const persisted = readPersistedState();
     return initialTenantId ?? persisted.tenantId ?? null;
-  });
-  const [activeSubtenantId, setActiveSubtenantId] = useState<string | null>(() => {
-    const persisted = readPersistedState();
-    return initialSubtenantId ?? persisted.subtenantId ?? null;
   });
 
   useEffect(() => {
@@ -68,27 +57,17 @@ export function TenantSwitchProvider({
       return;
     }
 
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ tenantId: activeTenantId, subtenantId: activeSubtenantId }),
-    );
-  }, [activeTenantId, activeSubtenantId]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ tenantId: activeTenantId }));
+  }, [activeTenantId]);
 
   const value = useMemo<TenantSwitchState>(
     () => ({
       activeTenantId,
-      activeSubtenantId,
       switchTenant: (tenantId) => {
         setActiveTenantId(tenantId);
-        if (!tenantId) {
-          setActiveSubtenantId(null);
-        }
-      },
-      switchSubtenant: (subtenantId) => {
-        setActiveSubtenantId(subtenantId);
       },
     }),
-    [activeTenantId, activeSubtenantId],
+    [activeTenantId],
   );
 
   return (
@@ -104,9 +83,7 @@ export function useTenantSwitch() {
   if (!ctx) {
     return {
       activeTenantId: null,
-      activeSubtenantId: null,
       switchTenant: () => {},
-      switchSubtenant: () => {},
     } as const;
   }
 

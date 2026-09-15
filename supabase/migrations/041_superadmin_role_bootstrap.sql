@@ -27,15 +27,13 @@ BEGIN
     full_name,
     email,
     platform_role,
-    tenant_id,
-    subtenant_id
+    tenant_id
   )
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
     NEW.email,
     'tenant_viewer',
-    NULL,
     NULL
   );
   RETURN NEW;
@@ -67,8 +65,7 @@ BEGIN
     tenant_id = CASE
       WHEN p_platform_role = 'platform_super_admin' THEN NULL
       ELSE tenant_id
-    END,
-    subtenant_id = NULL
+    END
   WHERE user_id = p_user_id
   RETURNING * INTO updated_row;
 
@@ -98,8 +95,7 @@ AS $$
   UPDATE public.profiles
   SET
     platform_role = 'tenant_admin',
-    tenant_id = p_tenant_id,
-    subtenant_id = NULL
+    tenant_id = p_tenant_id
   WHERE user_id = p_user_id
   RETURNING *;
 $$;

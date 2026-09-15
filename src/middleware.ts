@@ -85,20 +85,25 @@ export async function middleware(request: NextRequest) {
     return withRefreshedCookies(NextResponse.redirect(url))
   }
 
-  // CRM routes must be scoped to a tenant (or platform super-admin)
-  const tenantScopedPaths = ['/inbox', '/contacts', '/broadcasts', '/flows', '/settings'];
+  // Tenant workspace routes are separate from the platform console. A
+  // platform super-admin manages tenants from /super-admin rather than
+  // rendering the tenant workspace shell by accident.
+  const tenantScopedPaths = ['/dashboard', '/inbox', '/notifications', '/contacts', '/pipelines', '/broadcasts', '/automations', '/flows', '/agents', '/settings'];
   if (user && tenantScopedPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('tenant_id, subtenant_id, platform_role')
+      .select('tenant_id, platform_role')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    const hasScope =
-      profile?.platform_role === 'platform_super_admin' ||
-      !!profile?.tenant_id;
+    if (profile?.platform_role === 'platform_super_admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/super-admin';
+      url.search = '';
+      return withRefreshedCookies(NextResponse.redirect(url));
+    }
 
-    if (!hasScope) {
+    if (!profile?.tenant_id) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       url.search = '';

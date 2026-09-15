@@ -35,7 +35,16 @@ import {
 // the boundary; the inner component reads the query string.
 export default function SettingsPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            Loading settings...
+          </div>
+        </div>
+      }
+    >
       <SettingsPageInner />
     </Suspense>
   );
@@ -100,7 +109,9 @@ function SettingsPageInner() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[236px_minmax(0,1fr)] lg:items-start">
         <SettingsRail active={section} onSelect={go} hints={hints} />
-        <div className="min-w-0">{panel[section]}</div>
+        <div className="min-w-0 rounded-2xl border border-border/70 bg-card/35 p-1 shadow-sm backdrop-blur-sm">
+          {panel[section]}
+        </div>
       </div>
     </div>
   );

@@ -185,16 +185,16 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r border-[#1f2a34] bg-[#050b12] text-slate-100",
+          "fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r border-white/10 bg-slate-950/80 text-slate-100 shadow-2xl shadow-black/20 backdrop-blur-2xl",
           "transition-transform duration-200 ease-out will-change-transform",
           open ? "translate-x-0" : "-translate-x-full",
-          "lg:static lg:z-0 lg:w-64 lg:translate-x-0 lg:transition-none",
+          "lg:z-30 lg:w-64 lg:translate-x-0 lg:transition-none",
         )}
         aria-label="Primary"
       >
-        <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-[#1a2430] px-4">
+        <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4">
           <Link href={isPlatformAdmin ? "/super-admin" : "/dashboard"} className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#2c3a46] bg-[#0d141b] text-[10px] font-bold tracking-[0.2em] text-slate-200">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/15 text-[10px] font-bold tracking-[0.2em] text-primary">
               N
             </div>
             <div className="leading-none">
@@ -217,8 +217,8 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <div className="rounded-xl border border-[#1a2430] bg-[#0d141b] p-2 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
-            <div className="mb-2 px-2 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-400">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
               {isPlatformAdmin ? "Console" : "Workspace"}
             </div>
             <ul className="flex flex-col gap-1">
@@ -239,7 +239,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
                   unreadNotifications > 0;
 
                 const Icon = item.icon;
-                const label = "label" in item ? item.label : t((item as any).labelKey as string);
+                const label = "label" in item ? item.label : t(item.labelKey);
 
                 return (
                   <li key={item.href}>
@@ -278,7 +278,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
           </div>
 
           {!isPlatformAdmin && (
-            <div className="mt-4 rounded-xl border border-[#1a2430] bg-[#0d141b] p-2 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+            <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
               <div className="mb-2 px-2 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-400">
                 Settings
               </div>
@@ -308,7 +308,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         </nav>
 
         {/* User section */}
-        <div className="shrink-0 border-t border-border p-3">
+        <div className="shrink-0 border-t border-white/10 p-3">
           {/* Account name display — surfaced only when the account
               name differs from the user's own name (see
               `showAccountStrip`). For a default solo account the two

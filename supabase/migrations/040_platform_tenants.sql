@@ -10,14 +10,11 @@
 -- Design summary
 --   1. `tenants` is the root SaaS tenant registry.
 --   2. `tenant_users` tracks direct membership for a tenant.
---   3. `tenant_memberships` tracks user access within a tenant or
---      subtenant workspace.
---   4. `tenant_subtenants` is the organizational child-workspace model.
---   5. `platform_audit_logs` records admin and tenant actions.
---   6. `tenant_settings` stores tenant-level configuration.
---   7. `profiles.platform_role`, `profiles.tenant_id`, and
---      `profiles.subtenant_id` are added as optional platform-scoped
---      fields that can be backfilled later via admin tooling.
+--   3. `tenant_memberships` tracks user access within a tenant.
+--   4. `platform_audit_logs` records admin and tenant actions.
+--   5. `tenant_settings` stores tenant-level configuration.
+--   6. `profiles.platform_role` and `profiles.tenant_id` are added as
+--      optional platform-scoped fields that can be backfilled later via admin tooling.
 -- ============================================================
 
 DO $$
@@ -26,9 +23,7 @@ BEGIN
     CREATE TYPE platform_role_enum AS ENUM (
       'tenant_viewer',
       'tenant_agent',
-      'subtenant_agent',
       'tenant_admin',
-      'subtenant_admin',
       'tenant_owner',
       'platform_super_admin'
     );
@@ -81,47 +76,23 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON tenant_users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
--- TENANT SUBTENANTS
--- ============================================================
-CREATE TABLE IF NOT EXISTS tenant_subtenants (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  slug TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'archived')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(tenant_id, slug)
-);
-
-CREATE INDEX IF NOT EXISTS idx_tenant_subtenants_tenant
-  ON tenant_subtenants(tenant_id, status);
-
-ALTER TABLE tenant_subtenants ENABLE ROW LEVEL SECURITY;
-
-DROP TRIGGER IF EXISTS set_updated_at ON tenant_subtenants;
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON tenant_subtenants
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- ============================================================
 -- TENANT MEMBERSHIPS
 --
--- This table stores both tenant-level and subtenant-level membership
--- with the same role model, keeping the app able to resolve the active
--- workspace without overloading the existing `profiles.account_id` row.
+-- This table stores tenant-level membership with the same role model,
+-- keeping the app able to resolve the active workspace without
+-- overloading the existing `profiles.account_id` row.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tenant_memberships (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  subtenant_id UUID REFERENCES tenant_subtenants(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role platform_role_enum NOT NULL DEFAULT 'tenant_viewer',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(tenant_id, subtenant_id, user_id)
+  UNIQUE(tenant_id, user_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenant_memberships_user
-  ON tenant_memberships(user_id, tenant_id, subtenant_id);
+  ON tenant_memberships(user_id, tenant_id);
 
 ALTER TABLE tenant_memberships ENABLE ROW LEVEL SECURITY;
 
@@ -168,7 +139,6 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON tenant_quota_limits
 CREATE TABLE IF NOT EXISTS platform_audit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL,
-  subtenant_id UUID REFERENCES tenant_subtenants(id) ON DELETE SET NULL,
   actor_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   actor_role platform_role_enum,
   action TEXT NOT NULL,
@@ -202,14 +172,6 @@ CREATE POLICY tenant_users_modify ON tenant_users
   FOR ALL USING (is_tenant_member(tenant_id, 'tenant_admin') OR is_platform_super_admin())
   WITH CHECK (is_tenant_member(tenant_id, 'tenant_admin') OR is_platform_super_admin());
 
-DROP POLICY IF EXISTS tenant_subtenants_select ON tenant_subtenants;
-DROP POLICY IF EXISTS tenant_subtenants_modify ON tenant_subtenants;
-CREATE POLICY tenant_subtenants_select ON tenant_subtenants
-  FOR SELECT USING (is_tenant_member(tenant_id, 'tenant_viewer') OR is_platform_super_admin());
-CREATE POLICY tenant_subtenants_modify ON tenant_subtenants
-  FOR ALL USING (is_tenant_member(tenant_id, 'tenant_admin') OR is_platform_super_admin())
-  WITH CHECK (is_tenant_member(tenant_id, 'tenant_admin') OR is_platform_super_admin());
-
 DROP POLICY IF EXISTS tenant_settings_select ON tenant_settings;
 DROP POLICY IF EXISTS tenant_settings_modify ON tenant_settings;
 CREATE POLICY tenant_settings_select ON tenant_settings
@@ -238,11 +200,10 @@ CREATE POLICY platform_audit_logs_insert ON platform_audit_logs
 -- ============================================================
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS platform_role platform_role_enum,
-  ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS subtenant_id UUID REFERENCES tenant_subtenants(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_profiles_platform_role
-  ON profiles(platform_role, tenant_id, subtenant_id);
+  ON profiles(platform_role, tenant_id);
 
 -- ============================================================
 -- PLATFORM AUTH HELPERS
@@ -278,20 +239,16 @@ AS $$
     WHERE p.user_id = auth.uid()
       AND p.tenant_id = target_tenant_id
       AND CASE p.platform_role
-            WHEN 'platform_super_admin' THEN 7
-            WHEN 'tenant_owner' THEN 6
-            WHEN 'subtenant_admin' THEN 5
+            WHEN 'platform_super_admin' THEN 6
+            WHEN 'tenant_owner' THEN 5
             WHEN 'tenant_admin' THEN 4
-            WHEN 'subtenant_agent' THEN 3
             WHEN 'tenant_agent' THEN 2
             WHEN 'tenant_viewer' THEN 1
             ELSE 0
           END >= CASE min_role
-            WHEN 'platform_super_admin' THEN 7
-            WHEN 'tenant_owner' THEN 6
-            WHEN 'subtenant_admin' THEN 5
+            WHEN 'platform_super_admin' THEN 6
+            WHEN 'tenant_owner' THEN 5
             WHEN 'tenant_admin' THEN 4
-            WHEN 'subtenant_agent' THEN 3
             WHEN 'tenant_agent' THEN 2
             WHEN 'tenant_viewer' THEN 1
             ELSE 0

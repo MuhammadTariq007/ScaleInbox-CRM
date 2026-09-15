@@ -2,9 +2,7 @@ export type TenantStatus = "active" | "suspended" | "trial" | "archived";
 export type TenantMembershipRole =
   | "tenant_viewer"
   | "tenant_agent"
-  | "subtenant_agent"
   | "tenant_admin"
-  | "subtenant_admin"
   | "tenant_owner"
   | "platform_super_admin";
 
@@ -27,16 +25,6 @@ export interface TenantMember {
   role: TenantMembershipRole;
   is_owner: boolean;
   status: "active" | "invited" | "disabled";
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TenantSubtenant {
-  id: string;
-  tenant_id: string;
-  name: string;
-  slug: string;
-  status: "active" | "suspended" | "archived";
   created_at: string;
   updated_at: string;
 }

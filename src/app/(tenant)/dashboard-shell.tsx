@@ -44,17 +44,16 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   return (
     <TenantSwitchProvider
       initialTenantId={profile?.tenant_id ?? null}
-      initialSubtenantId={profile?.subtenant_id ?? null}
     >
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="min-h-screen overflow-x-hidden bg-background">
         {/* Reports this tab's online/away presence once we know a user is
             signed in. Headless — renders nothing. */}
         <PresenceHeartbeat />
         <Sidebar open={sidebarOpen} onClose={closeSidebar} />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-screen flex-col lg:pl-64">
           <Header onOpenSidebar={() => setSidebarOpen(true)} />
           {/* Thinner horizontal padding on mobile so cards have room to breathe. */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8">
             {/* Above every page: writes are being rejected and here's why.
                 Renders nothing unless the account/role failed to resolve. */}
             <AccountAccessAlert />

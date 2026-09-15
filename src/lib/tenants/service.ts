@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requirePlatformAdmin } from "@/lib/platform/context";
-import type { Tenant, TenantSubtenant } from "./types";
+import type { Tenant } from "./types";
 
 export async function listTenants(): Promise<Tenant[]> {
   const supabase = await createClient();
@@ -58,50 +58,6 @@ export async function listPlatformMembers() {
   }
 
   return data ?? [];
-}
-
-export async function listTenantSubtenants(tenantId: string): Promise<TenantSubtenant[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("tenant_subtenants")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    throw new Error(`Failed to list subtenants: ${error.message}`);
-  }
-
-  return (data ?? []) as TenantSubtenant[];
-}
-
-export async function createTenantSubtenant(input: {
-  tenantId: string;
-  name: string;
-  slug?: string;
-  status?: "active" | "suspended" | "archived";
-}) {
-  const ctx = await requirePlatformAdmin();
-  const supabase = ctx.supabase;
-
-  const slug = input.slug ?? input.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-
-  const { data, error } = await supabase
-    .from("tenant_subtenants")
-    .insert({
-      tenant_id: input.tenantId,
-      name: input.name,
-      slug,
-      status: input.status ?? "active",
-    })
-    .select("*")
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to create subtenant: ${error.message}`);
-  }
-
-  return data as TenantSubtenant;
 }
 
 export async function createTenant(input: {
